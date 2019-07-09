@@ -1,0 +1,88 @@
+server:
+  port: ${server-port:9999}
+eureka:
+  client:
+    service-url:
+      defaultZone: http://10.254.206.188:1100/eureka
+    #从Eureka服务器端获取注册信息的间隔时间默认30S
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+    #eureka服务器接收到最后一个心跳之后等待的时间S
+    lease-expiration-duration-in-seconds: 15
+    #eureka客户端向服务端发送心跳的时间间隔
+    lease-renewal-interval-in-seconds: 5
+    status-page-url-path: management/info
+    health-check-url-path: management/health
+
+## 暴露监控监控，优雅停机服务
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: "*"
+      base-path: /management
+  server:
+    #健康检查端口 port:54102
+    port: ${management-port:58103}
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      enabled: true
+      show-details: always
+    info:
+      enabled: true
+spring:
+  profiles:
+    active: dev
+  application:
+    name: springCloud-aliba
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        heartbeatIntervalMs: 10
+        port: 8888
+
+##timeout config
+hystrix:
+  threadpool:
+    default:
+      ##初始化，默认10
+      coreSize: 200
+      ##并发执行的最大线程数，默认10
+      maximumSize: 800
+      ##空闲线程存活时间
+      keepAliveTimeMinutes: 1
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 8000
+
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 5000
+  #配置首台服务器重试1次
+  MaxAutoRetries: 0
+  #配置其他服务器重试两次
+  MaxAutoRetriesNextServer: 1
+  OkToRetryOnAllOperations: false
+
+feign:
+  hystrix:
+    enabled: true
+  httpclient:
+    enabled: false
+  okhttp:
+    enabled: true
+
+logging:
+  level:
+    root: info
